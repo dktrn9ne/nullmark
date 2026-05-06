@@ -2,9 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="format-detection" content="telephone=no">
-<meta name="color-scheme" content="dark">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NULLMARK — Credit Intelligence</title>
 
 <!-- ── PWA META TAGS ── -->
@@ -15,11 +13,16 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="NULLMARK">
 <meta name="application-name" content="NULLMARK">
-<meta name="description" content="Credit Intelligence Platform — Dispute. Verify. Build.">
+<meta name="description" content="Onchain credit dispute, score simulation, and AI-powered credit intelligence.">
 <meta name="msapplication-TileColor" content="#050508">
 <meta name="msapplication-navbutton-color" content="#00e5b0">
 
-<!-- ── MANIFEST injected inline via JS below ── -->
+<!-- ── REAL MANIFEST + ICONS ── -->
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/png" sizes="48x48" href="/icon-48.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/icon-152.png">
+<link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -62,8 +65,6 @@
     display: flex;
     height: 100vh;
     overflow: hidden;
-    text-rendering: optimizeLegibility;
-    -webkit-text-size-adjust: 100%;
   }
 
   /* SCANLINE OVERLAY */
@@ -302,7 +303,6 @@
 
   .screen { display: none; padding: 28px; }
   .screen.active { display: block; }
-  .screen.active { content-visibility: auto; contain-intrinsic-size: 800px; }
 
   /* ── DASHBOARD SCREEN ── */
   .dash-grid {
@@ -1666,111 +1666,6 @@
     color: var(--text-muted);
     margin-top: 5px;
   }
-
-  /* ── MOBILE / ANDROID OPTIMIZATION ── */
-  @media (max-width: 1024px) {
-    body {
-      height: 100dvh;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    body::before { opacity: 0.35; }
-
-    .sidebar {
-      width: 100%;
-      min-width: 100%;
-      max-height: 96px;
-      border-right: none;
-      border-bottom: 1px solid var(--border);
-      flex-direction: row;
-      align-items: stretch;
-      overflow-x: auto;
-      overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .logo-block,
-    .sidebar-footer { display: none; }
-
-    .nav-section {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 10px 10px 8px;
-      flex-shrink: 0;
-    }
-
-    .nav-divider { display: none; }
-    .nav-label { display: none; }
-
-    .nav-item {
-      white-space: nowrap;
-      border-left: none;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 9px 12px;
-      font-size: 12px;
-      gap: 6px;
-      min-height: 38px;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .nav-item.active {
-      border-color: var(--teal);
-      background: var(--teal-glow-soft);
-    }
-
-    .main { min-height: 0; }
-    .topbar { padding: 0 12px; }
-    .topbar-right .status-dot { display: none; }
-    .score-chip { padding: 5px 8px; gap: 6px; }
-
-    .content { -webkit-overflow-scrolling: touch; }
-    .screen { padding: 14px; }
-    .screen-title { font-size: 26px; letter-spacing: 2px; }
-
-    .dash-grid,
-    .sim-grid,
-    .esc-cards-grid,
-    .bureau-grid,
-    .oracle-metrics,
-    .nft-grid { grid-template-columns: 1fr; }
-
-    .chat-layout,
-    .letter-builder { grid-template-columns: 1fr; height: auto; min-height: 0; }
-
-    .context-panel { order: -1; }
-    .score-hero { grid-column: auto; grid-row: auto; }
-    .col-span-2,
-    .col-span-3 { grid-column: auto; }
-
-    .dt-header,
-    .dt-row,
-    .vt-row {
-      grid-template-columns: 1fr;
-      gap: 6px;
-      padding: 12px 14px;
-    }
-
-    .escalation-path {
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-
-    .escalation-path::after { display: none; }
-
-    .esc-step {
-      flex-direction: row;
-      justify-content: flex-start;
-      align-items: center;
-      gap: 10px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
-    }
-  }
 </style>
 </head>
 <body>
@@ -2708,305 +2603,59 @@ function setW3Tab(tab) {
 <div id="offline-toast">◌ OFFLINE MODE — Cached Data</div>
 
 <!-- ── SW UPDATE TOAST ── -->
-<div id="sw-update-toast" id="sw-update-toast">↻ Update available — tap to reload</div>
+<div id="sw-update-toast">↻ Update available — tap to reload</div>
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  NULLMARK PWA — Manifest + Icon + Service Worker
-//  All injected inline — zero external files required
+//  NULLMARK PWA Bootstrap — Real files, no blobs
 // ═══════════════════════════════════════════════════════
-
 (function () {
   'use strict';
 
-  // ── 1. GENERATE ICONS VIA CANVAS ──────────────────────
-  // Draws the Nullmark icon at multiple resolutions,
-  // outputs as PNG data URLs for the manifest.
-
-  function generateIcon(size) {
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    const s = size;
-
-    // Background — deep void
-    ctx.fillStyle = '#050508';
-    ctx.fillRect(0, 0, s, s);
-
-    // Outer border glow
-    const borderWidth = Math.max(1, s * 0.018);
-    ctx.strokeStyle = '#1e2033';
-    ctx.lineWidth = borderWidth;
-    const r = s * 0.18;
-    roundRect(ctx, borderWidth / 2, borderWidth / 2, s - borderWidth, s - borderWidth, r);
-    ctx.stroke();
-
-    // Teal glow ring
-    const glowGrad = ctx.createRadialGradient(s/2, s/2, s*0.1, s/2, s/2, s*0.5);
-    glowGrad.addColorStop(0, 'rgba(0,229,176,0.08)');
-    glowGrad.addColorStop(1, 'rgba(0,229,176,0)');
-    ctx.fillStyle = glowGrad;
-    ctx.fillRect(0, 0, s, s);
-
-    // "N" lettermark
-    const pad = s * 0.2;
-    const lw = s * 0.1;
-    ctx.strokeStyle = '#00e5b0';
-    ctx.lineWidth = lw;
-    ctx.lineCap = 'square';
-    ctx.lineJoin = 'miter';
-    ctx.shadowColor = '#00e5b0';
-    ctx.shadowBlur = size * 0.08;
-
-    ctx.beginPath();
-    ctx.moveTo(pad, s - pad);
-    ctx.lineTo(pad, pad);
-    ctx.lineTo(s - pad, s - pad);
-    ctx.lineTo(s - pad, pad);
-    ctx.stroke();
-
-    // Bottom teal line accent
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = 'rgba(0,229,176,0.3)';
-    ctx.lineWidth = Math.max(1, s * 0.025);
-    ctx.beginPath();
-    ctx.moveTo(s * 0.15, s * 0.88);
-    ctx.lineTo(s * 0.85, s * 0.88);
-    ctx.stroke();
-
-    return canvas.toDataURL('image/png');
-  }
-
-  function roundRect(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.closePath();
-  }
-
-  const icon192 = generateIcon(192);
-  const icon512 = generateIcon(512);
-  const icon180 = generateIcon(180); // Apple touch icon
-
-  // Apple touch icon
-  const appleTouchLink = document.createElement('link');
-  appleTouchLink.rel = 'apple-touch-icon';
-  appleTouchLink.href = icon180;
-  document.head.appendChild(appleTouchLink);
-
-  // Favicon
-  const faviconLink = document.createElement('link');
-  faviconLink.rel = 'icon';
-  faviconLink.type = 'image/png';
-  faviconLink.href = generateIcon(32);
-  document.head.appendChild(faviconLink);
-
-  // ── 2. INJECT MANIFEST VIA BLOB URL ───────────────────
-  const manifest = {
-    name: 'NULLMARK — Credit Intelligence',
-    short_name: 'NULLMARK',
-    description: 'Onchain credit dispute, score simulation, and AI-powered credit intelligence.',
-    start_url: './',
-    scope: './',
-    display: 'standalone',
-    orientation: 'portrait-primary',
-    background_color: '#050508',
-    theme_color: '#050508',
-    categories: ['finance', 'productivity'],
-    lang: 'en',
-    icons: [
-      { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-      { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
-    ],
-    shortcuts: [
-      {
-        name: 'Maya AI',
-        short_name: 'Maya',
-        description: 'Open credit intelligence chat',
-        url: './#maya',
-        icons: [{ src: icon192, sizes: '192x192' }]
-      },
-      {
-        name: 'Dispute Vault',
-        short_name: 'Disputes',
-        description: 'Manage active disputes',
-        url: './#vault',
-        icons: [{ src: icon192, sizes: '192x192' }]
-      },
-      {
-        name: 'Score Simulation',
-        short_name: 'Simulate',
-        description: 'Run score projections',
-        url: './#simulation',
-        icons: [{ src: icon192, sizes: '192x192' }]
-      }
-    ],
-    screenshots: [],
-    related_applications: [],
-    prefer_related_applications: false
-  };
-
-  const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
-  const manifestURL = URL.createObjectURL(manifestBlob);
-  const manifestLink = document.createElement('link');
-  manifestLink.rel = 'manifest';
-  manifestLink.href = manifestURL;
-  document.head.appendChild(manifestLink);
-
-  // Handle URL-based deep links from shortcuts
-  const hash = window.location.hash.replace('#', '');
-  if (hash && ['maya','simulation','vault','bureau','fcra','web3','roadmap','escalation'].includes(hash)) {
-    setTimeout(() => showScreen(hash), 100);
-  }
-
-  // ── 3. SERVICE WORKER BLOB ────────────────────────────
-  const SW_VERSION = 'nullmark-v1.0.0';
-  const CACHE_NAME = SW_VERSION;
-
-  const swCode = `
-const CACHE = '${SW_VERSION}';
-const SHELL = ['./'];
-
-// Font CDN URLs to cache
-const FONT_URLS = [
-  'https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&family=Bebas+Neue&display=swap'
-];
-
-// ── INSTALL: cache app shell ──
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(cache => {
-      return Promise.allSettled([
-        ...SHELL.map(url => cache.add(url).catch(() => {})),
-        ...FONT_URLS.map(url => cache.add(url).catch(() => {}))
-      ]);
-    }).then(() => self.skipWaiting())
-  );
-});
-
-// ── ACTIVATE: delete old caches ──
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(k => k !== CACHE).map(k => caches.delete(k))
-      )
-    ).then(() => self.clients.claim())
-  );
-});
-
-// ── FETCH: cache-first for shell, network-first for fonts/CDN ──
-self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
-
-  // Skip non-GET and chrome-extension requests
-  if (e.request.method !== 'GET') return;
-  if (url.protocol === 'chrome-extension:') return;
-  if (url.protocol === 'blob:') return;
-
-  // App shell — cache first, always serve
-  if (url.pathname === self.location.pathname || url.href === self.registration.scope) {
-    e.respondWith(
-      caches.match(e.request).then(cached => {
-        const networkFetch = fetch(e.request).then(res => {
-          if (res.ok) {
-            const clone = res.clone();
-            caches.open(CACHE).then(cache => cache.put(e.request, clone));
-          }
-          return res;
-        }).catch(() => cached);
-        return cached || networkFetch;
-      })
-    );
-    return;
-  }
-
-  // Google Fonts — stale-while-revalidate
-  if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
-    e.respondWith(
-      caches.open(CACHE).then(cache =>
-        cache.match(e.request).then(cached => {
-          const fetched = fetch(e.request).then(res => {
-            if (res.ok) cache.put(e.request, res.clone());
-            return res;
-          }).catch(() => cached);
-          return cached || fetched;
-        })
-      )
-    );
-    return;
-  }
-
-  // Everything else — network with cache fallback
-  e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
-  );
-});
-
-// ── MESSAGE: skipWaiting on demand ──
-self.addEventListener('message', e => {
-  if (e.data === 'SKIP_WAITING') self.skipWaiting();
-});
-`;
-
-  // ── 4. REGISTER SERVICE WORKER ────────────────────────
+  // ── 1. REGISTER REAL SERVICE WORKER ──────────────────
   if ('serviceWorker' in navigator) {
-    const swBlob = new Blob([swCode], { type: 'application/javascript' });
-    const swURL = URL.createObjectURL(swBlob);
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        .then(reg => {
+          console.log('[Nullmark SW] Registered:', reg.scope);
 
-    navigator.serviceWorker.register(swURL, { scope: './' })
-      .then(reg => {
-        console.log('[Nullmark SW] Registered:', reg.scope);
-
-        // Show update toast if new SW is waiting
-        reg.addEventListener('updatefound', () => {
-          const newSW = reg.installing;
-          newSW.addEventListener('statechange', () => {
-            if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-              const toast = document.getElementById('sw-update-toast');
-              if (toast) {
-                toast.classList.add('visible');
-                toast.addEventListener('click', () => {
-                  newSW.postMessage('SKIP_WAITING');
-                  window.location.reload();
-                });
+          reg.addEventListener('updatefound', () => {
+            const newSW = reg.installing;
+            newSW.addEventListener('statechange', () => {
+              if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+                const toast = document.getElementById('sw-update-toast');
+                if (toast) {
+                  toast.classList.add('visible');
+                  toast.addEventListener('click', () => {
+                    newSW.postMessage('SKIP_WAITING');
+                    window.location.reload();
+                  });
+                }
               }
-            }
+            });
           });
-        });
-      })
-      .catch(err => console.warn('[Nullmark SW] Registration failed:', err));
+        })
+        .catch(err => console.warn('[Nullmark SW] Failed:', err));
 
-    // Reload when new SW takes control
-    let swRefreshing = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!swRefreshing) { swRefreshing = true; window.location.reload(); }
+      let swRefreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!swRefreshing) { swRefreshing = true; window.location.reload(); }
+      });
     });
   }
 
-  // ── 5. ONLINE / OFFLINE DETECTION ────────────────────
+  // ── 2. OFFLINE / ONLINE DETECTION ────────────────────
   const offlineToast = document.getElementById('offline-toast');
 
   function showOffline() {
     if (offlineToast) offlineToast.classList.add('visible');
   }
-
   function hideOffline() {
     if (offlineToast) offlineToast.classList.remove('visible');
   }
 
   window.addEventListener('offline', showOffline);
   window.addEventListener('online', () => {
-    hideOffline();
-    // Brief "back online" flash
     if (offlineToast) {
       offlineToast.textContent = '✓ BACK ONLINE';
       offlineToast.style.color = 'var(--teal)';
@@ -3027,26 +2676,19 @@ self.addEventListener('message', e => {
 
   if (!navigator.onLine) showOffline();
 
-  // ── 6. PWA INSTALL PROMPT ─────────────────────────────
+  // ── 3. INSTALL PROMPT ─────────────────────────────────
   let deferredPrompt = null;
   const banner = document.getElementById('pwa-install-banner');
   const installBtn = document.getElementById('pwa-install-btn');
   const dismissBtn = document.getElementById('pwa-dismiss-btn');
-
-  // Don't show if already installed or dismissed this session
-  const dismissed = sessionStorage.getItem('nullmark-pwa-dismissed');
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
     || window.navigator.standalone === true;
 
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
-
-    if (!dismissed && !isStandalone) {
-      // Delay banner slightly so it doesn't pop immediately on load
-      setTimeout(() => {
-        if (banner) banner.classList.add('visible');
-      }, 3500);
+    if (!sessionStorage.getItem('nullmark-pwa-dismissed') && !isStandalone) {
+      setTimeout(() => { if (banner) banner.classList.add('visible'); }, 3500);
     }
   });
 
@@ -3068,16 +2710,16 @@ self.addEventListener('message', e => {
     });
   }
 
-  // Hide banner if already running as installed PWA
-  window.matchMedia('(display-mode: standalone)').addEventListener('change', e => {
-    if (e.matches && banner) banner.classList.remove('visible');
-  });
+  // ── 4. HASH-BASED DEEP LINKS (from shortcuts) ────────
+  const hash = window.location.hash.replace('#', '');
+  const validScreens = ['maya','simulation','vault','bureau','fcra','web3','roadmap','escalation'];
+  if (hash && validScreens.includes(hash)) {
+    setTimeout(() => showScreen(hash), 150);
+  }
 
-  // ── 7. MOBILE VIEWPORT POLISH ────────────────────────
-  // Prevent double-tap zoom on touch devices (Seeker)
+  // ── 5. MOBILE POLISH ─────────────────────────────────
   document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
 
-  // Status bar color sync on Seeker/Android
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   if (metaTheme) {
     document.addEventListener('visibilitychange', () => {
