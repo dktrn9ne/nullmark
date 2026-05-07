@@ -25,7 +25,7 @@ Over 200 million Americans have errors on their credit reports. The dispute proc
 
 | Dashboard | Dispute | Proofs | Maya |
 |---|---|---|---|
-| ![Dashboard](https://github.com/dktrn9ne/nullmark/blob/main/Screenshot_20260507-043947.png)) | ![Dispute](https://github.com/dktrn9ne/nullmark/blob/main/Screenshot_20260507-044018.png)) | ![Proofs](https://github.com/dktrn9ne/nullmark/blob/main/Screenshot_20260507-044018.png)| ![Maya](https://github.com/dktrn9ne/nullmark/blob/main/Screenshot_20260507-044045.png)|
+| ![Dashboard](https://github.com/dktrn9ne/nullmark/blob/main/Screenshot_20260507-043947.png)) | ![Dispute](https://github.com/dktrn9ne/nullmark/blob/main/Screenshot_20260507-044006.png) | ![Proofs](https://github.com/dktrn9ne/nullmark/blob/main/Screenshot_20260507-044018.png)| ![Maya](https://github.com/dktrn9ne/nullmark/blob/main/Screenshot_20260507-044045.png)|
 ## Tech Stack
 
 | Layer | Technology |
