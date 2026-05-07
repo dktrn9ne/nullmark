@@ -2977,5 +2977,101 @@ document.querySelectorAll('.suggestion-chip').forEach(chip => {
   });
 });
 </script>
+  <script src="/nullmark-chain.js"></script>
+<script>
+window.addEventListener('load', () => {
+  // Wire every "Hash to Chain" button
+  document.querySelectorAll('button, [onclick]').forEach(el => {
+    if (el.textContent.includes('Hash to Chain') || el.textContent.includes('Hash to chain')) {
+      el.onclick = null;
+      el.addEventListener('click', handleHashToChain);
+    }
+  });
+
+  // Wire Maya send button
+  const sendBtn = document.querySelector('.send-btn');
+  const chatInput = document.querySelector('.chat-input');
+  if (sendBtn) sendBtn.addEventListener('click', sendMaya);
+  if (chatInput) chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMaya(); });
+
+  document.querySelectorAll('.suggestion-chip').forEach(chip => {
+    chip.addEventListener('click', () => { if (chatInput) { chatInput.value = chip.textContent.trim(); sendMaya(); } });
+  });
+});
+
+async function handleHashToChain(e) {
+  const btn = e.currentTarget;
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '⟳ Anchoring...';
+  try {
+    const letterEl = document.querySelector('.letter-body, .generated-letter, #generatedLetter, [id*="letter"]');
+    const letterText = letterEl ? letterEl.innerText : 'Nullmark Dispute Proof — ' + new Date().toISOString();
+    const result = await NullmarkChain.hashToChain({
+      creditor: 'Joseph Mann & Creed', bureau: 'All 3 Bureaus',
+      disputeType: 'Metro 2 Compliance Dispute', letterText
+    });
+    showChainModal(result);
+  } catch(err) {
+    alert('Chain error: ' + err.message);
+  } finally { btn.disabled = false; btn.innerHTML = orig; }
+}
+
+function showChainModal({ signature, hashHex, explorerUrl }) {
+  document.getElementById('nm-chain-modal')?.remove();
+  const m = document.createElement('div');
+  m.id = 'nm-chain-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(5,5,8,.94);display:flex;align-items:center;justify-content:center;z-index:9999;';
+  m.innerHTML = `<div style="background:#0d0f1a;border:1px solid #00e5b0;border-radius:12px;padding:32px;max-width:500px;width:92%;font-family:'JetBrains Mono',monospace;box-shadow:0 0 60px rgba(0,229,176,.15)">
+    <div style="color:#00e5b0;font-size:13px;letter-spacing:3px;margin-bottom:4px">✓ ANCHORED TO SOLANA DEVNET</div>
+    <div style="color:#7a7f9a;font-size:11px;margin-bottom:24px">DISPUTE PROOF WRITTEN ON-CHAIN · IMMUTABLE</div>
+    <div style="background:#050508;border:1px solid #1e2033;border-radius:8px;padding:16px;margin-bottom:10px">
+      <div style="color:#3d4160;font-size:9px;letter-spacing:2px;margin-bottom:8px">TX SIGNATURE</div>
+      <div style="color:#00e5b0;font-size:10px;word-break:break-all;line-height:1.6">${signature}</div>
+    </div>
+    <div style="background:#050508;border:1px solid #1e2033;border-radius:8px;padding:16px;margin-bottom:20px">
+      <div style="color:#3d4160;font-size:9px;letter-spacing:2px;margin-bottom:8px">SHA-256 HASH</div>
+      <div style="color:#7a7f9a;font-size:10px;word-break:break-all;line-height:1.6">${hashHex}</div>
+    </div>
+    <a href="${explorerUrl}" target="_blank" style="display:block;background:#00e5b0;color:#050508;text-align:center;padding:13px;border-radius:8px;font-size:11px;letter-spacing:2px;font-weight:700;text-decoration:none;margin-bottom:10px">VIEW ON SOLANA EXPLORER ↗</a>
+    <button onclick="document.getElementById('nm-chain-modal').remove()" style="width:100%;background:transparent;border:1px solid #1e2033;color:#3d4160;padding:10px;border-radius:8px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px">CLOSE</button>
+  </div>`;
+  document.body.appendChild(m);
+  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+}
+
+const MAYA_SYS = `You are Maya, Nullmark's AI credit intelligence assistant. Be concise, sharp, data-driven. User profile: EQ 628, EX 611, TU 635. Active disputes: LVNV Funding (deleted/won), Joseph Mann & Creed (investigating), Kikoff (submitted). Utilization: 34%. Keep responses under 100 words.`;
+
+async function sendMaya() {
+  const chatInput = document.querySelector('.chat-input');
+  const chatMessages = document.querySelector('.chat-messages');
+  const text = chatInput?.value?.trim();
+  if (!text || !chatMessages) return;
+  chatInput.value = '';
+  const userMsg = document.createElement('div');
+  userMsg.className = 'msg user';
+  userMsg.innerHTML = `<div class="msg-bubble">${text}</div><div class="msg-tag">YOU · ${new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}</div>`;
+  chatMessages.appendChild(userMsg);
+  const mayaMsg = document.createElement('div');
+  mayaMsg.className = 'msg maya';
+  mayaMsg.innerHTML = `<div class="msg-bubble" style="opacity:.6">⟳ Analyzing...</div><div class="msg-tag">MAYA</div>`;
+  chatMessages.appendChild(mayaMsg);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 300, system: MAYA_SYS, messages: [{ role: 'user', content: text }] })
+    });
+    const data = await res.json();
+    mayaMsg.querySelector('.msg-bubble').innerHTML = (data.content?.[0]?.text || 'Error').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+    mayaMsg.querySelector('.msg-bubble').style.opacity = '1';
+    mayaMsg.querySelector('.msg-tag').textContent = `MAYA · ${new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}`;
+  } catch(err) {
+    mayaMsg.querySelector('.msg-bubble').textContent = 'Connection error.';
+  }
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+</script>
 </body>
 </html>
