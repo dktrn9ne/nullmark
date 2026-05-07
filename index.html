@@ -2819,5 +2819,163 @@ function setW3Tab(tab) {
 
 })();
 </script>
+<script src="/nullmark-chain.js"></script>
+<script>
+// ── HASH TO CHAIN ──────────────────────────────────────────
+document.querySelectorAll('[data-action="hash-chain"], .hash-chain-btn').forEach(btn => {
+  btn.addEventListener('click', handleHashToChain);
+});
+
+// Also wire any button containing the text "Hash to Chain"
+document.querySelectorAll('button, .btn-outline, .action-btn').forEach(btn => {
+  if (btn.textContent.includes('Hash to Chain')) {
+    btn.addEventListener('click', handleHashToChain);
+  }
+});
+
+async function handleHashToChain(e) {
+  const btn = e.currentTarget;
+  const letterEl = document.getElementById('generatedLetter')
+    || document.querySelector('.letter-body')
+    || document.querySelector('.generated-letter');
+
+  const letterText = letterEl ? letterEl.innerText : 'Nullmark Dispute Letter — ' + new Date().toISOString();
+
+  btn.disabled = true;
+  const orig = btn.innerHTML;
+  btn.innerHTML = '⟳ Anchoring to Solana Devnet...';
+
+  try {
+    const result = await NullmarkChain.hashToChain({
+      creditor:    'Joseph Mann & Creed',
+      bureau:      'All 3 Bureaus',
+      disputeType: 'Metro 2 Compliance Dispute',
+      letterText
+    });
+    showChainModal(result);
+  } catch (err) {
+    console.error(err);
+    alert('Transaction failed: ' + err.message + '\\n\\nCheck console for airdrop instructions.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = orig;
+  }
+}
+
+function showChainModal({ signature, hashHex, explorerUrl }) {
+  const existing = document.getElementById('chain-modal');
+  if (existing) existing.remove();
+
+  const m = document.createElement('div');
+  m.id = 'chain-modal';
+  m.style.cssText = `
+    position:fixed;inset:0;background:rgba(5,5,8,.94);
+    display:flex;align-items:center;justify-content:center;z-index:9999;
+  `;
+  m.innerHTML = `
+    <div style="background:#0d0f1a;border:1px solid #00e5b0;border-radius:12px;
+      padding:32px;max-width:500px;width:92%;font-family:'JetBrains Mono',monospace;
+      box-shadow:0 0 60px rgba(0,229,176,0.15);">
+      <div style="color:#00e5b0;font-size:13px;letter-spacing:3px;margin-bottom:4px">✓ ANCHORED TO SOLANA DEVNET</div>
+      <div style="color:#7a7f9a;font-size:11px;margin-bottom:24px;letter-spacing:1px">
+        DISPUTE PROOF WRITTEN ON-CHAIN · IMMUTABLE
+      </div>
+      <div style="background:#050508;border:1px solid #1e2033;border-radius:8px;padding:16px;margin-bottom:10px">
+        <div style="color:#3d4160;font-size:9px;letter-spacing:2px;margin-bottom:8px">TX SIGNATURE</div>
+        <div style="color:#00e5b0;font-size:10px;word-break:break-all;line-height:1.6">${signature}</div>
+      </div>
+      <div style="background:#050508;border:1px solid #1e2033;border-radius:8px;padding:16px;margin-bottom:20px">
+        <div style="color:#3d4160;font-size:9px;letter-spacing:2px;margin-bottom:8px">SHA-256 HASH</div>
+        <div style="color:#7a7f9a;font-size:10px;word-break:break-all;line-height:1.6">${hashHex}</div>
+      </div>
+      <a href="${explorerUrl}" target="_blank" style="
+        display:block;background:#00e5b0;color:#050508;text-align:center;
+        padding:13px;border-radius:8px;font-size:11px;letter-spacing:2px;
+        font-weight:700;text-decoration:none;margin-bottom:10px;">
+        VIEW ON SOLANA EXPLORER ↗
+      </a>
+      <button onclick="document.getElementById('chain-modal').remove()" style="
+        width:100%;background:transparent;border:1px solid #1e2033;
+        color:#3d4160;padding:10px;border-radius:8px;cursor:pointer;
+        font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;">
+        CLOSE
+      </button>
+    </div>
+  `;
+  document.body.appendChild(m);
+  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+}
+
+// ── MAYA AI — Live Anthropic API ───────────────────────────
+const MAYA_CONTEXT = {
+  scores: { EQ: 628, EX: 611, TU: 635 },
+  disputes: ['LVNV Funding (deleted)', 'Joseph Mann & Creed (investigating)', 'Kikoff (submitted)'],
+  utilization: '34%',
+  derogItems: 2
+};
+
+const MAYA_SYSTEM = `You are Maya, an AI credit intelligence assistant inside the Nullmark app. 
+You are concise, data-driven, and speak like a sharp financial advisor. 
+The user's current credit profile: Equifax 628, Experian 611, TransUnion 635. 
+Active disputes: LVNV Funding (deleted - won), Joseph Mann & Creed (investigating), Kikoff (submitted). 
+Credit utilization: 34%. 2 derogatory items remaining.
+Keep responses under 120 words. Use specific numbers. Reference their actual data when relevant.`;
+
+const chatMessages = document.querySelector('.chat-messages');
+const chatInput    = document.querySelector('.chat-input');
+const sendBtn      = document.querySelector('.send-btn');
+
+async function sendMaya() {
+  const text = chatInput?.value?.trim();
+  if (!text) return;
+
+  appendMsg('user', text);
+  chatInput.value = '';
+  const thinking = appendMsg('maya', '⟳ Analyzing...', true);
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        system: MAYA_SYSTEM,
+        messages: [{ role: 'user', content: text }]
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || 'Unable to process — try again.';
+    thinking.querySelector('.msg-bubble').innerHTML = formatMayaReply(reply);
+  } catch(err) {
+    thinking.querySelector('.msg-bubble').textContent = 'Connection error. Check API key in Vercel env vars.';
+  }
+}
+
+function appendMsg(role, text, isTemp = false) {
+  if (!chatMessages) return { querySelector: () => ({}) };
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `<div class="msg-bubble">${text}</div>
+    <div class="msg-tag">${role === 'maya' ? 'MAYA' : 'YOU'} · ${new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}</div>`;
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  return div;
+}
+
+function formatMayaReply(text) {
+  return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+             .replace(/\\n/g, '<br>');
+}
+
+if (sendBtn)   sendBtn.addEventListener('click', sendMaya);
+if (chatInput) chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMaya(); });
+
+document.querySelectorAll('.suggestion-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    if (chatInput) { chatInput.value = chip.textContent.trim(); sendMaya(); }
+  });
+});
+</script>
 </body>
 </html>
