@@ -2204,10 +2204,10 @@
             <div style="display:flex;gap:8px">
               <button class="action-btn" style="padding:5px 12px;font-size:12px">Copy</button>
               <button class="action-btn" style="padding:5px 12px;font-size:12px">Export PDF</button>
-              <button class="action-btn" style="padding:5px 12px;font-size:12px;border-color:var(--purple-bright);color:var(--purple-bright)">⬡ Hash to Chain</button>
+              <button class="action-btn" data-action="hash-to-chain" style="padding:5px 12px;font-size:12px;border-color:var(--purple-bright);color:var(--purple-bright)">⬡ Hash to Chain</button>
             </div>
           </div>
-          <div class="letter-body">
+          <div class="letter-body" id="letterOutput">
 <span class="letter-highlight">Re: Formal Dispute — Metro 2 Compliance Failure
 Creditor: Joseph Mann & Creed | Account #8872</span>
 
@@ -2578,6 +2578,92 @@ function showScreen(id) {
   });
 }
 
+
+
+function addProofReceipt({ hashHex }) {
+  const receiptList = document.querySelector('#w3-receipts .receipt-list');
+  if (!receiptList) return;
+
+  const receiptItem = document.createElement('div');
+  receiptItem.className = 'receipt-item';
+  receiptItem.innerHTML = `
+    <div class="receipt-icon">⬡</div>
+    <div>
+      <div class="receipt-hash">0x${hashHex.slice(0, 16)}…</div>
+      <div class="receipt-detail">Metro 2 Compliance Dispute — Joseph Mann & Creed — All 3 Bureaus</div>
+    </div>
+    <div class="receipt-ts">${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}<br><span style="color:var(--teal)">✓ On-chain</span></div>
+  `;
+
+  receiptList.prepend(receiptItem);
+}
+
+async function handleHashToChain() {
+  const btn = document.querySelector('[data-action="hash-to-chain"]');
+  const letterText = document.getElementById('letterOutput')?.innerText || '';
+
+  if (!btn) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '⟳ Anchoring to Solana Devnet...';
+
+  try {
+    const result = await NullmarkChain.hashToChain({
+      creditor: 'Joseph Mann & Creed',
+      bureau: 'All 3 Bureaus',
+      letterText,
+      disputeType: 'Metro 2 Compliance Dispute'
+    });
+
+    showChainModal(result);
+    addProofReceipt(result);
+  } catch (err) {
+    console.error(err);
+    btn.innerHTML = '⚠ Transaction failed — check devnet balance';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '⬡ Hash to Chain';
+  }
+}
+
+function showChainModal({ signature, hashHex, explorerUrl }) {
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position:fixed;inset:0;background:rgba(5,5,8,.92);
+    display:flex;align-items:center;justify-content:center;z-index:9999;
+  `;
+  modal.innerHTML = `
+    <div style="background:#0d0f1a;border:1px solid #00e5b0;border-radius:16px;
+      padding:32px;max-width:480px;width:90%;font-family:'DM Mono',monospace;">
+      <div style="color:#00e5b0;font-size:28px;margin-bottom:8px">✓ ANCHORED</div>
+      <div style="color:#fff;font-size:13px;margin-bottom:24px">
+        Dispute proof written to Solana Devnet
+      </div>
+      <div style="background:#050508;border-radius:8px;padding:16px;margin-bottom:16px">
+        <div style="color:#666;font-size:10px;letter-spacing:.1em;margin-bottom:6px">TX SIGNATURE</div>
+        <div style="color:#00e5b0;font-size:11px;word-break:break-all">${signature}</div>
+      </div>
+      <div style="background:#050508;border-radius:8px;padding:16px;margin-bottom:24px">
+        <div style="color:#666;font-size:10px;letter-spacing:.1em;margin-bottom:6px">SHA-256 HASH</div>
+        <div style="color:#aaa;font-size:11px;word-break:break-all">${hashHex}</div>
+      </div>
+      <a href="${explorerUrl}" target="_blank" style="
+        display:block;background:#00e5b0;color:#050508;text-align:center;
+        padding:12px;border-radius:8px;font-size:12px;letter-spacing:.08em;
+        font-weight:700;text-decoration:none;margin-bottom:12px">
+        VIEW ON SOLANA EXPLORER ↗
+      </a>
+      <button onclick="this.closest('div[style]').remove()" style="
+        width:100%;background:transparent;border:1px solid #1e2130;
+        color:#666;padding:10px;border-radius:8px;cursor:pointer;
+        font-family:'DM Mono',monospace;font-size:11px">
+        CLOSE
+      </button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
 function setW3Tab(tab) {
   ['nft','receipts','oracle','dao'].forEach(t => {
     document.getElementById('w3-' + t).style.display = t === tab ? 'block' : 'none';
@@ -2712,6 +2798,9 @@ function setW3Tab(tab) {
   }
 
   // ── 4. HASH-BASED DEEP LINKS (from shortcuts) ────────
+  const hashToChainBtn = document.querySelector('[data-action="hash-to-chain"]');
+  if (hashToChainBtn) hashToChainBtn.addEventListener('click', handleHashToChain);
+
   const hash = window.location.hash.replace('#', '');
   const validScreens = ['maya','simulation','vault','bureau','fcra','web3','roadmap','escalation'];
   if (hash && validScreens.includes(hash)) {
