@@ -2300,7 +2300,7 @@ Respectfully,
           <div class="receipt-item">
             <div class="receipt-icon">📄</div>
             <div>
-              <div class="receipt-hash">0x7f3a9b2e4c1d8a…</div>
+              <div class="receipt-hash">5rM2VvQp9hLw4Xk7…</div>
               <div class="receipt-detail">FCRA § 611 Letter — Joseph Mann & Creed — All 3 Bureaus</div>
             </div>
             <div class="receipt-ts">May 2, 2026<br><span style="color:var(--teal)">✓ On-chain</span></div>
@@ -2308,7 +2308,7 @@ Respectfully,
           <div class="receipt-item">
             <div class="receipt-icon">📬</div>
             <div>
-              <div class="receipt-hash">0x2c8f4a1e7b3d9c…</div>
+              <div class="receipt-hash">3JtN8cYw6Qm2Lp4R…</div>
               <div class="receipt-detail">FDCPA Debt Validation — LVNV Funding — Certified Mail #9400</div>
             </div>
             <div class="receipt-ts">Apr 18, 2026<br><span style="color:var(--teal)">✓ On-chain</span></div>
@@ -2316,7 +2316,7 @@ Respectfully,
           <div class="receipt-item">
             <div class="receipt-icon">⚖️</div>
             <div>
-              <div class="receipt-hash">0x5a1d7c2f8b4e6a…</div>
+              <div class="receipt-hash">9uK4mX2qT7bH3wPd…</div>
               <div class="receipt-detail">CFPB Complaint Filed — Portfolio Recovery Re-Aging Violation</div>
             </div>
             <div class="receipt-ts">Apr 30, 2026<br><span style="color:var(--teal)">✓ On-chain</span></div>
@@ -2324,7 +2324,7 @@ Respectfully,
           <div class="receipt-item">
             <div class="receipt-icon">✅</div>
             <div>
-              <div class="receipt-hash">0x9e4b2a7d1c8f3e…</div>
+              <div class="receipt-hash">7Lp3Qv8mNz2cTx5K…</div>
               <div class="receipt-detail">Deletion Confirmation — LVNV Funding — Equifax Response Letter</div>
             </div>
             <div class="receipt-ts">May 2, 2026<br><span style="color:var(--teal)">✓ On-chain</span></div>
@@ -2580,7 +2580,7 @@ function showScreen(id) {
 
 
 
-function addProofReceipt({ hashHex }) {
+function addProofReceipt({ signature, hashHex }) {
   const receiptList = document.querySelector('#w3-receipts .receipt-list');
   if (!receiptList) return;
 
@@ -2589,7 +2589,7 @@ function addProofReceipt({ hashHex }) {
   receiptItem.innerHTML = `
     <div class="receipt-icon">⬡</div>
     <div>
-      <div class="receipt-hash">0x${hashHex.slice(0, 16)}…</div>
+      <div class="receipt-hash">${(signature || hashHex).slice(0, 16)}…</div>
       <div class="receipt-detail">Metro 2 Compliance Dispute — Joseph Mann & Creed — All 3 Bureaus</div>
     </div>
     <div class="receipt-ts">${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}<br><span style="color:var(--teal)">✓ On-chain</span></div>
