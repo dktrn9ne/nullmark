@@ -2,7 +2,7 @@
 //  NULLMARK Service Worker v1.0.0
 // ═══════════════════════════════════════════════
 
-const CACHE = 'nullmark-v1.0.0';
+const CACHE_NAME = 'nullmark-v2';
 
 const APP_SHELL = [
   '/',
