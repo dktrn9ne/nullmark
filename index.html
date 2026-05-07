@@ -2698,39 +2698,6 @@ function setW3Tab(tab) {
 // ═══════════════════════════════════════════════════════
 (function () {
   'use strict';
-
-  // ── 1. REGISTER REAL SERVICE WORKER ──────────────────
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js', { scope: '/' })
-        .then(reg => {
-          console.log('[Nullmark SW] Registered:', reg.scope);
-
-          reg.addEventListener('updatefound', () => {
-            const newSW = reg.installing;
-            newSW.addEventListener('statechange', () => {
-              if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-                const toast = document.getElementById('sw-update-toast');
-                if (toast) {
-                  toast.classList.add('visible');
-                  toast.addEventListener('click', () => {
-                    newSW.postMessage('SKIP_WAITING');
-                    window.location.reload();
-                  });
-                }
-              }
-            });
-          });
-        })
-        .catch(err => console.warn('[Nullmark SW] Failed:', err));
-
-      let swRefreshing = false;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!swRefreshing) { swRefreshing = true; window.location.reload(); }
-      });
-    });
-  }
-
   // ── 2. OFFLINE / ONLINE DETECTION ────────────────────
   const offlineToast = document.getElementById('offline-toast');
 
